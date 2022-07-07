@@ -1,0 +1,195 @@
+// Truffle命令
+
+// test AP & BU
+
+// 实例化合约
+ap = await AP.deployed()
+bu = await BU.deployed()
+
+// 输入测试地址
+addr1 = '0x2a2Be0416766F891abE53ae2C18bFaCd8b18F7D9'
+addr2 = '0x17b3620038Fc2B69C957Dde8d97613F6A35ab9C1'
+addr3 = '0x4BCdB57765deD4CDF357532Dd6911af02c75ca60'
+
+// 输入测试属性
+attr1 = {attrName: '1', attrType: '1', attrValue: '1'}
+attr2 = {attrName: '2', attrType: '2', attrValue: '2'}
+attr3 = {attrName: '3', attrType: '3', attrValue: '3'}
+
+// 录入bu地址
+ap.buAddrUpdate(bu.address) 
+bu.attrAddrUpdate(ap.address)
+
+// BU
+ap.del(addr1)
+ap.getNum(addr1)
+
+ap.add(addr1, attr1)
+ap.getNum(addr1)
+ap.add(addr1, attr2)
+ap.getNum(addr1)
+ap.add(addr1, attr3)
+ap.getNum(addr1)
+
+ap.get(addr1, 0)
+ap.get(addr1, 1)
+ap.get(addr1, 2)
+ap.get(addr1, 3)
+
+ap.del(addr1)
+ap.getNum(addr1)
+ap.get(addr1, 2)
+
+ap.add(addr2, attr1)
+ap.getNum(addr2)
+ap.add(addr2, attr2)
+ap.getNum(addr2)
+ap.add(addr2, attr3)
+ap.getNum(addr2)
+
+ap.mod(addr2, 0, attr3)
+ap.getNum(addr2)
+ap.get(addr2, 0)
+
+
+///////////////////////////////
+// Test Trs
+
+// polAddrUpdate with require
+trs = await TRS.deployed()
+addr_pol = '0x2a2Be0416766F891abE53ae2C18bFaCd8b18F7D9'
+trs.polAddrUpdate(addr_pol)
+
+addr1 = '0x17b3620038Fc2B69C957Dde8d97613F6A35ab9C1'
+addr2 = '0x4BCdB57765deD4CDF357532Dd6911af02c75ca60'
+trs.repUpdate(addr1, addr2, true)
+
+trs.getRep(addr1)
+
+
+// testrep, polAddrUpdate without require
+trs = await TRS.deployed()
+
+addr1 = '0x17b3620038Fc2B69C957Dde8d97613F6A35ab9C1'
+addr2 = '0x4BCdB57765deD4CDF357532Dd6911af02c75ca60'
+addr3 = '0x909fD84Df4c770D3e22305FCD2EFC610057A179A'
+
+trs.getRep(addr2) // 0
+trs.testrep(addr2) // n0,r0
+
+trs.repUpdate(addr2, addr1, true) 
+trs.testrep(addr2) // n1,r10
+trs.getRepValue(addr2) // 0 (=ln1)
+
+trs.repUpdate(addr2, addr3, true)
+trs.testrep(addr2) // n2,r19
+trs.getRepValue(addr2) // 0 ()
+
+trs.repUpdate(addr3, addr2, false)
+trs.testrep(addr3) // n3,r28
+trs.getRepValue(addr3) // 28
+
+
+// revToken, getToken
+trs.getToken(addr1, 1)
+trs.revToken(addr1, -10, 2, 3, 4)
+
+
+///////////////////////////////
+// POL
+
+// 实例化合约
+ap = await AP.deployed()
+trs = await TRS.deployed()
+pol = await POL.deployed()
+bu = await BU.deployed()
+
+// 录入地址
+ap.buAddrUpdate(bu.address) 
+ap.polAddrUpdate(pol.address)
+
+bu.attrAddrUpdate(ap.address)
+
+trs.polAddrUpdate(pol.address)
+
+pol.apAddrUpdate(ap.address)
+pol.trsAddrUpdate(trs.address)
+
+
+// 输入测试地址
+sc = '0xB34f70b79315fDAD7CE6bae7b1D313d3305426C0'
+sp = '0xDe7Ae918f29c9889a597ef7F6a660AA8a0003949'
+
+// 输入测试属性
+sp_attr = {attrName: '1', attrType: '1', attrValue: '1'}
+sp_rep = 0;
+
+sp2 = {attrName: '2', attrType: '2', attrValue: '2'}
+sp3 = {attrName: '3', attrType: '3', attrValue: '3'}
+
+sc1 = {attrName: '1', attrType: '1', attrValue: '1'}
+sc2 = {attrName: '2', attrType: '2', attrValue: '2'}
+
+// 录入数据
+ap.add(sc, sc1)
+pol.attrAdd(sp, sp_attr)
+pol.repMod(sp,sp_rep)
+
+// getAttrNum, getAttr
+pol.getAttrNum(sp)
+pol.getAttr(sp, 0)
+
+// attrCheck, repCheck
+pol.attrCheck(sc, sp)
+
+// attrCheck, repCheck
+pol.repCheck(sc, sp_rep)
+
+// tokencreate
+message = {addrSC: sc, addrSP: sp, r: 0, tao: 0, sig_SC: '0x00'}
+pol.tokenCreate(message)
+tx = await pol.sendToken(message)
+
+// Find token 
+trs.getToken(sc, tx.logs[0].args[1])
+
+// 监测信任值变化(+)
+trs.getRepValue(sc) // 0
+addr1 = '0x6dAB3113c386E96dF73A5c443015D47CD5403479'
+addr2 = '0x8e4ce468d2dc38D89dc612c5BECb4026653E750c'
+addr3 = '0x4184d1ecf592A56Dc1a2823187D98E450457e378'
+pol.attrCheck(sc, addr1)
+pol.repCheck(sc, 0)
+
+message1 = {addrSC: sc, addrSP: addr1, r: 0, tao: 0, sig_SC: 'a'}
+pol.sendToken(message1)
+trs.getRepValue(sc)
+
+message2 = {addrSC: sc, addrSP: addr2, r: 0, tao: 0, sig_SC: 'a'}
+pol.sendToken(message2)
+trs.getRepValue(sc)
+
+message3 = {addrSC: sc, addrSP: addr3, r: 0, tao: 0, sig_SC: 'a'}
+pol.sendToken(message3)
+trs.getRepValue(sc)
+
+// 监测信任值变化(-)
+pol.repMod(addr1,10000)
+message1 = {addrSC: sc, addrSP: addr1, r: 0, tao: 0, sig_SC: 'a'}
+pol.sendToken(message1)
+trs.getRepValue(sc)
+
+// Sigverify
+sig = await SIG.deployed()
+sc = '0xd20b84aa8fD427b4D99baa0D2d00F783DE4a1645'
+sp = '0x0E2437C79Bf1B50572E25Bdd8977F2b24C049C35'
+message = {addrSC: sc, addrSP: sp, r: 51, tao: 32}
+
+getMessageHash = sig.getMessageHash(message.addrSC, message.addrSP, message.r, message.tao)
+// '0xbdecb31613fbefc4cce13dc77442fae33f63154b5b3f19eeaa1c079e03fa2d46'
+
+sign = web3.eth.sign(getMessageHash, sc)
+// '0xaaa84a1ab6efd32d2eb26b7a7e607f422587a988d41a10206b7dc65ab9d796bc62f6d3115be1c365e93ffb74717b5730dd06456c690a3066198b1c364baa746201'
+// https://qa.1r1g.cn/ethereum/ask/1792101/
+
+sig.verify(message.addrSC, message.addrSP, message.r, message.tao, sign)
